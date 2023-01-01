@@ -1,0 +1,366 @@
+---
+title: 'Lab Report 3'
+author: "Gunchica Bhalla"
+geometry: margin=.75in
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+    theme: cosmo
+header-includes:
+- \usepackage{graphicx}
+- \usepackage{color}
+graphics: yes
+fontsize: 11pt
+---
+
+
+### 1. Comparing Two Variances
+```{r}
+library('tidyverse') 
+```
+
+
+```{r}
+## Read data here
+
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+
+library('ggplot2')
+
+earning <- read.csv('Data/earnings_female.csv')
+
+employed_gender <- read.csv('Data/employed_gender.csv')
+
+jobs<- read.csv('Data/jobs_gender.csv')
+
+# ...
+
+## call tidyverse and any other library you'll need ( you can call later if you want ) 
+str(jobs)
+
+## Set theme to something else (optional)
+theme_set(theme_minimal())
+```
+
+```{r}
+ggplot(jobs, aes(x=total_earnings_female, y=major_category,colour= major_category)) + 
+  geom_boxplot() + 
+  ggtitle('Boxplot of Earnings') + theme_light()+theme(legend.position = 'none')
+```
+
+
+> The median earning of females with a major in service is 28384. The lowest a female earns with a service major is 116771 and the maximum is 100508. The range is 83837.
+The median earning of females with a major in Sales and Office is 35631. The lowest a female with a sales and office major is 1688 and the maximum is 90274. The range is 70586
+The median earning of females with a major in Production, Transportation, and Material Moving is 27883. The lowest a female with production, transportation and material moving is 7447 and the maximum is 130660 and the range is 123213
+The median earning of females with a major in Natural Resources, construction and Maintenance is 35580. The lowest a female with Natural Resources, Construction, and Maintenance is 11080 and the maximum is 158929. The range is 147849.
+The median earning of females with a major in Management, Business, and Financial is 56810. The lowest a female can earn is 25310 and the maximum is 131780. The range is 106470.
+The median earning of female with a major in Healthcare Practitioners and Technical is 60984. The lowest a female can earn 31126 and the maximum is 166388. The range is 135262.
+The median earnings of a female with a major in Education, Legal, Community Service, Arts, and Media is 40581. The lowest a female can earn is 20748 and the maximum is 102484. The range is 81736
+The median earnings of a female with a major in Computer, Engineering, and Science is 68925. The lowest a female can earn 33376 and the maximum is 120253. The range is 86877.
+Healthcare Practitioners and Technical majors have the highest range and Sales and Office majors have the lowest range of earnings for females.
+
+
+```{r}
+sample1 <- subset(jobs, occupation == 'Mechanical engineers')$total_earnings_female
+sample2 <- subset(jobs, occupation == 'Chief executives')$total_earnings_female
+var.test(sample1,sample2)
+```
+
+> Reject the hypothesis that the variance female earnings in two occupations are equal 
+
+```{r}
+var.test(sample1,sample2, alternative = 'less')
+```
+
+> Fail to Reject the hypothesis that the variance female earnings as Mechanical Engineers(x) is greater than or equal to  the mean female earnings as Chief executives (y).
+
+```{r}
+var.test(sample1,sample2, alternative = 'greater')
+```
+
+> We cannot reject the hypothesis that the variance female earnings as Mechanical Engineers(x) is lesser than or equal to  the mean female earnings as Chief executives (y).
+
+\pagebreak
+
+### 2. Comparing two population means
+
+```{r}
+t.test(sample1,sample2, var.equal = F)
+
+```
+
+> Reject the hypothesis that the mean female earnings in two occupations are equal 
+
+```{r}
+t.test(sample1,sample2, var.equal = F, alternative = 'less')
+```
+
+> Reject the hypothesis that the mean female earnings as Mechanical Engineers(x) is greater than or equal to  the mean female earnings as Chief executives (y).
+
+```{r}
+t.test(sample1,sample2, var.equal = F, alternative = 'greater')
+```
+
+> We cannot reject the hypothesis that the mean female earnings as Mechanical Engineers(x) is lesser than or equal to  the mean female earnings as Chief executives (y).
+
+\pagebreak
+
+### 3. Two Way ANOVA
+```{r}
+library('ggplot2')
+small <- subset(jobs,occupation %in% c('Lawyers','Chief executives','Mathemeticians',
+                             'Industrial production managers','Mechanical engineers',
+              'Engineering technicians, except drafters','Bakers','Police Detective',
+                                       'Cargo and freight agents','Data entry keyers',
+            'Agriculatural inspectors','Fashion Designer',"Pumping station operators",
+            "Locomotive engineers and operators","Upholsterers","Tool and die makers",
+            "Food processing workers, all other","Telecommunications line installers 
+            and  repairers" ))
+
+ggplot(small, aes(x=total_earnings, y = occupation, color= major_category)) +
+  geom_jitter(alpha=.6) +
+  theme_light() +
+  theme(legend.position = 'none')
+```
+
+> The above graph represents the total earning female and a selected few occupations in a jitter plot.Cheif Excecutive females are the highest paid and Bakers are paid the least(21937). 
+
+
+```{r}
+ggplot(small, aes(y=occupation, x=total_earnings_female, color=major_category)) +
+  geom_jitter(alpha=.4, position = position_jitter(.2)) +
+  geom_boxplot(color='black',fill=adjustcolor('grey90',.3),outlier.alpha = 0) +
+  theme_light() +
+  theme(legend.position = 'none')
+```
+
+
+> The above graph represents the total earning female and a selected few occupations in a box plot.Cheif Excecutive females are the highest paid with a comparatively small range and Bakers are paid the least but lawyers have the smallest ramge
+
+
+
+
+```{r}
+
+library('tidyverse')
+medians <- small %>% group_by(major_category) %>% summarise(medians=median(total_earnings))
+small$major_category <- factor(small$major_category, 
+                               levels=medians$major_category[order(medians$medians)])
+
+ggplot(small, aes(x=total_earnings,y=major_category, colour=occupation)) + 
+  geom_boxplot(outlier.alpha = 0, fill=adjustcolor('grey50',.3), colour='black') +
+  geom_jitter(alpha=.3) + 
+  theme(legend.position = 'none')
+
+
+#temp <- subset(houses, zipcode %in% c(98040,98075,98053))
+```
+>The above graph represents the total earnings and majors in form of a box plot.Education, Legal, Community Service, Arts, and Media major has the lowest range and Management, Business, and Financial major has the highest range.
+
+```{r}
+anova(lm(total_earnings ~ major_category,data = small))
+```
+
+> The p-value is too small, so we reject the hypothesis that the four regions have equal population means
+
+
+```{r}
+small <- subset(jobs,occupation %in% c('Lawyers','Chief executives','Mathemeticians',
+                              'Industrial production managers','Mechanical engineers',
+               'Engineering technicians, except drafters','Bakers','Police Detective',
+                                        'Cargo and freight agents','Data entry keyers',
+             'Agriculatural inspectors','Fashion Designer',"Pumping station operators",
+             "Locomotive engineers and operators","Upholsterers","Tool and die makers",
+"Food processing workers, all other","Telecommunications line installers and repairers" ))
+small$difference <- small$total_earnings_male > small$total_earnings_female
+
+ggplot(small, aes(x=total_earnings, y=major_category, colour=difference)) + 
+  geom_boxplot() 
+```
+> The above graph demonstrates that men are payed more that women in all mjaor_categories.
+
+
+```{r}
+anova(lm(total_earnings ~ major_category + difference,data = small))
+```
+
+> We can see that both major category and difference are significantly changing the variability. Thus we reject the hypothesis that the population means among different major category and gender wages are equal. In other words, your major category and your gender are significant factors that affect your total earnings.
+
+\pagebreak
+
+### 4. Testing proportions
+
+```{r}
+jobs$major_category <- as.factor(jobs$major_category)
+jobs$difference <- ifelse(jobs$total_earnings_male > jobs$total_earnings_female,1,0)
+
+props <- jobs %>% group_by(jobs$major_category) %>% summarize(phat = mean(difference,na.rm =T))
+props$major_category <- factor(props$`jobs$major_category`, 
+                               levels=props$`jobs$major_category`[order(props$phat)])
+
+ggplot(props, aes(y=major_category)) +
+  geom_point(aes(x=phat), colour='firebrick') + 
+  geom_segment(aes(x=0, yend = major_category, xend=phat), 
+               colour = 'grey', alpha=.5) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  theme(legend.position = 'none') + 
+  ggtitle('Portions of difference in the wages in major categories')
+
+
+jobs_agg <- jobs %>% group_by(major_category) %>% 
+  summarize(nmulti = sum(difference,na.rm = T), allmajors= n())
+
+x_mercer  <- jobs_agg$nmulti[jobs_agg$major_category == 'Computer, Engineering, and Science']
+n_mercer  <- jobs_agg$allmajors[jobs_agg$major_category == 'Computer, Engineering, and Science']
+
+prop.test(x = x_mercer, n = n_mercer, p=0.5)
+
+
+
+
+
+
+```
+> p value is greather than 0.5 we fail to reject the hypothesis that the portions of difference in wages in different majors is equal to 0.5 for Computer, Engineering, and Science major
+
+```{r}
+x_mercer  <- jobs_agg$nmulti[jobs_agg$major_category == 'Computer, Engineering, and Science']
+n_mercer  <- jobs_agg$allmajors[jobs_agg$major_category == 'Computer, Engineering, and Science']
+
+prop.test(x = x_mercer, n = n_mercer, p=0.5, alternative = 'less')
+```
+
+
+> p value is greather than 0.5 we fail to reject the hypothesis that the portions of difference in wages in different majors is lesser than 0.5 for Computer, Engineering, and Science major
+
+
+```{r}
+x_mercer  <- jobs_agg$nmulti[jobs_agg$major_category == 'Computer, Engineering, and Science']
+n_mercer  <- jobs_agg$allmajors[jobs_agg$major_category == 'Computer, Engineering, and Science']
+
+prop.test(x = x_mercer, n = n_mercer, p=0.5, alternative = 'greater')
+```
+
+> p value is greather than 0.5 we fail to reject the hypothesis that the portions of difference in wages in different majors is greater than 0.5 for Computer, Engineering, and Science major
+
+
+
+
+
+
+
+
+
+
+```{r}
+small$occupation <- as.factor(small$occupation)
+small$difference <- ifelse(small$total_earnings_male > small$total_earnings_female,1,0)
+
+props1 <- small %>% group_by(small$occupation) %>% summarize(phat = mean(difference))
+props1$occupation <- factor(props1$`small$occupation`, 
+                            levels = props1$`small$occupation`[order(props1$phat)])
+
+ggplot(props1, aes(y= `small$occupation`)) +
+  geom_point(aes(x=phat), colour='firebrick') + 
+  geom_segment(aes(x=0, yend = `small$occupation`, xend=phat), colour = 'grey', alpha=.5) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  theme(legend.position = 'none') + 
+  ggtitle('Proportions of difference of wages in the selected occupations')
+
+
+occ_agg <- small %>% group_by(small$occupation) %>% 
+  summarize(nmulti = sum(difference,na.rm = T), allmajors= n())
+
+x_mercer  <- occ_agg$nmulti[occ_agg$`small$occupation` == 'Mechanical engineers']
+n_mercer  <- occ_agg$allmajors[occ_agg$`small$occupation` == 'Mechanical engineers']
+
+prop.test(x = x_mercer, n = n_mercer, p=0.5)
+```
+> p value is greather than 0.5 we fail to reject the hypothesis that the portions of difference in wages in different majors is equal to 0.5 for Mechanical Engineers
+
+
+ 
+
+
+
+
+### Thanks!
+```{r}
+# install.packages('jsonlite')
+library('jsonlite')
+library('ggplot2')
+
+CHOICE <- 1 # choose either 0, 1, 2 or 3
+
+if (CHOICE == 1){
+  sc <- function(x) sqrt(1-x^2)                                # semicircle
+  el <- function(x) 3*sc(abs(x)/7)                             # ellipse
+  nl <- function(x) (-1) * el(x)                               # negative of el 
+  sh <- function(x) 4.2 - .5*abs(x) -2.8*sc(.5*abs(x) -.5)     # shoulders
+  bf <- function(x) sc(abs(2 - abs(x)) - 1) - x^2/11 + .5*abs(x) -3      # bottom
+  cr  <- data.frame(x = c(0, .5, .8, 1), y = c(1.7, 1.7, 2.6, .9))   # cowl right
+  cl  <- data.frame(x = -cr$x, y = cr$y)   
+  #
+  plot_create <- function(fun, xmin, xmax){
+    rp <- ggplot2::stat_function(fun = fun, xlim = c(xmin,xmax))
+    lp <- ggplot2::stat_function(fun = fun, xlim = c(-xmax, -xmin))
+    result_plot <- list(left_plot = lp, right_plot = rp)
+    return(result_plot)
+  }
+  #
+  g <- ggplot(data.frame(x = c(-7,7), y=c(-3,3)), aes(x,y))
+  #
+  upper_wing_plot <- plot_create(fun = el, xmin = 3, xmax = 7)
+  #
+  lower_wing_plot <- plot_create(fun = nl, xmin = 4, xmax = 7)
+  g <- g + upper_wing_plot$left_plot + upper_wing_plot$right_plot +
+    lower_wing_plot$left_plot + lower_wing_plot$right_plot
+  #
+  sh_plot <- plot_create(fun = sh, xmin = 1, xmax = 3)
+  g <- g + sh_plot$left_plot + sh_plot$right_plot
+  #
+  bt_plot <- plot_create(fun = bf, xmin = 0, xmax = 4)
+  g <- g + bt_plot$left_plot + bt_plot$right_plot
+  #
+  g <- g + geom_path(data = cr)
+  g <- g + geom_path(data = cl)
+  g + coord_fixed() + theme_void()
+  
+  } else if (CHOICE == 2){
+  
+  greet <- fromJSON(readLines('http://www.data-imaginist.com/assets/data/x-mas.json'))
+  layer_names <- greet$layers$name
+  heart <- greet$layers$paths[[which(layer_names == 'Heart')]]$points
+  merry <- greet$layers$paths[[which(layer_names == 'Merry')]]$points
+  x_mas <- greet$layers$paths[[which(layer_names == 'X-MAS')]]$points
+  range <- greet$layers$paths[[which(layer_names == 'back')]]$points[[1]]
+  
+  ggplot(as.data.frame(heart[[1]])) + 
+    geom_polygon(aes(V1, V2), fill='hotpink') + 
+    scale_y_reverse() +  theme_void()
+
+} else if(CHOICE == 3) {
+  dat<- data.frame(t=seq(0, 2*pi, by=0.1) )
+  xhrt <- function(t) 16*sin(t)^3
+  yhrt <- function(t) 13*cos(t)-5*cos(2*t)-2*cos(3*t)-cos(4*t)
+  dat$y=yhrt(dat$t)
+  dat$x=xhrt(dat$t)
+  with(dat, plot(x,y, type="l", ann=F, frame=F, xaxt='n',yaxt='n'))
+  with(dat, polygon(x,y, col="hotpink"))   
+  points(c(10,-10, -15, 15), c(-10, -10, 10, 10), pch=169, font=5)
+} else {
+  ggplot() + theme_void()
+}
+```
+
+References:
+
+- https://stackoverflow.com/questions/8082429/plot-a-heart-in-r#8082714
+- https://charlotte-ngs.github.io/BatmanPlot/BatmanPlotPost.html
+- https://www.data-imaginist.com/2016/data-driven-x-mas-card/
